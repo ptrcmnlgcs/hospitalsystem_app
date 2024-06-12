@@ -62,8 +62,18 @@ const routes = [{
     
 ]
 
-const router = createRouter({
-    history: createWebHashHistory(),
-    routes
-})
-export default router
+    // Navigation Guard
+    router.beforeEach((to, from, next) => {
+        const token = localStorage.getItem('token')
+        if (to.matched.some(record => record.meta.requiresAuth) && !token) {
+            next({ name: 'login' }) // Redirect to login if no token is found
+        } else {
+            next() // Proceed to route
+        }
+    })
+
+    const router = createRouter({
+        history: createWebHashHistory(),
+        routes
+    })
+    export default router
