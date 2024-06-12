@@ -3,6 +3,7 @@ import UserManagement from '@/components/Users.vue';
 import ManageRegister from '@/components/ManageRegister.vue'
 import ManageLogin from '@/components/ManageLogin.vue'
 import PatientManagement from '@/components/Patients.vue'
+import AppointmentManagement from '@/components/Appointments.vue';
 
 const routes = [{
         path: '/',
@@ -29,6 +30,12 @@ const routes = [{
         path: '/users',
         name: 'UserManagement',
         component: UserManagement,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/appointments',
+        name: 'AppointmentManagement',
+        component: AppointmentManagement,
         meta: { requiresAuth: true }
     },
     
