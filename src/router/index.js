@@ -62,6 +62,12 @@ const routes = [{
     
 ]
 
+
+    const router = createRouter({
+        history: createWebHashHistory(),
+        routes
+    })
+
     // Navigation Guard
     router.beforeEach((to, from, next) => {
         const token = localStorage.getItem('token')
@@ -71,9 +77,5 @@ const routes = [{
             next() // Proceed to route
         }
     })
-
-    const router = createRouter({
-        history: createWebHashHistory(),
-        routes
-    })
+    
     export default router
