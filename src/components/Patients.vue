@@ -1,89 +1,71 @@
 <template>
     <DashboardView />
     <div class="hello">
-        <h1>User Management</h1>
-        <button class="btn btn-info btn-sm m-1" @click="addDoctor()">Add a User</button>
+        <h1>Patient Management</h1>
+        <button v-if="isAdmin" class="btn btn-info btn-sm m-1" @click="addPatient()">Add a Patient</button>
         <table class="table table-striped table-bordered">
             <thead class="thead-dark">
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>User Type</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="user in users" :key="user.id">
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.name }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.userType }}</td>
+                <tr v-for="patient in patients" :key="patient.id">
+                    <td>{{ patient.id }}</td>
+                    <td>{{ patient.name }}</td>
+                    <td>{{ patient.email }}</td>
                     <td>
-                        <button class="btn btn-warning btn-sm m-1" @click="editUser(user)">Edit</button>
-                        <button class="btn btn-danger btn-sm m-1" @click="deleteUser(user)">Delete</button>
+                        <button v-if="isAdmin || isDoctor" class="btn btn-warning btn-sm m-1" @click="editPatient(patient)">Edit</button>
+                        <button v-if="isAdmin" class="btn btn-danger btn-sm m-1" @click="deletePatient(patient)">Delete</button>
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
     
-    <Modal v-if="showAddUserModal" @close="showAddUserModal = false">
+    <Modal v-if="showAddPatientModal" @close="showAddPatientModal = false">
         <template v-slot:header>
-            <h5>Add New User</h5>
+            <h5>Add New Patient</h5>
         </template>
         <template v-slot:body>
-            <form @submit.prevent="postUser()" class="registration-form">
+            <form @submit.prevent="postPatient()">
                 <div class="form-group">
-                    <label for="name">Name:</label>
-                    <input class="form-control" type="text" v-model="newUserData.name" id="name" required>
+                    <label for="newPatientName">Name</label>
+                    <input type="text" class="form-control" id="newPatientName" v-model="newPatientData.name">
                 </div>
                 <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input class="form-control" type="text" v-model="newUserData.email" id="email" required>
+                    <label for="newPatientEmail">Email</label>
+                    <input type="text" class="form-control" id="newPatientEmail" v-model="newPatientData.email">
                 </div>
                 <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input class="form-control" type="password" v-model="newUserData.password" id="password" required>
+                    <label for="newPatientPassword">Password</label>
+                    <input type="password" class="form-control" id="newPatientPassword" v-model="newPatientData.password">
                 </div>
-                <div class="form-group">
-                    <label for="userType">User Type:</label>
-                    <select class="form-control" id="userType" v-model="newUserData.userType" required>
-                        <option value="doctor">Doctor</option>
-                        <option value="patient">Patient</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary m-1 btn-block">Register</button>
+                <button type="submit" class="btn btn-primary btn-block">Add</button>
             </form>
-            <div v-if="error" class="error">{{ error }}</div>
         </template>
     </Modal>
     
-    <Modal v-if="showeditUserModal" @close="showeditUserModal = false">
+    <Modal v-if="showEditPatientModal" @close="showEditPatientModal = false">
         <template v-slot:header>
-            <h5>Edit User Details</h5>
+            <h5>Edit Patient Details</h5>
         </template>
         <template v-slot:body>
-            <form @submit.prevent="updateUser()" class="registration-form">
+            <form @submit.prevent="updatePatient()">
                 <div class="form-group">
-                    <label for="name">Name:</label>
-                    <input class="form-control" type="text" v-model="editUserData.name" id="name" required>
+                    <label for="newPatientName">Name</label>
+                    <input type="text" class="form-control" id="newPatientName" v-model="editPatientData.name">
                 </div>
                 <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input class="form-control" type="text" v-model="editUserData.email" id="email" required>
+                    <label for="newPatientEmail">Email</label>
+                    <input type="text" class="form-control" id="newPatientEmail" v-model="editPatientData.email">
                 </div>
                 <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input class="form-control" type="password" v-model="editUserData.password" id="password" required>
-                </div>
-                <div class="form-group">
-                    <label for="userType">User Type:</label>
-                    <select class="form-control" id="userType" v-model="editUserData.userType" required>
-                        <option value="admin">Administrator</option>
-                        <option value="doctor">Doctor</option>
-                        <option value="patient">Patient</option>
-                    </select>
+                    <label for="newPatientPassword">Password</label>
+                    <input type="password" class="form-control" id="newPatientPassword" v-model="editPatientData.password">
                 </div>
                 <button type="submit" class="btn btn-primary m-1 btn-block">Update</button>
             </form>
@@ -97,38 +79,53 @@
     import DashboardView from '@/views/DashboardView.vue';
     
     export default {
-        name: 'DoctorManagement',
+        name: 'PatientManagement',
         components: {
             Modal,
             DashboardView
         },
         data() {
             return {
-                users: [],
-                showAddUserModal: false,
-                showeditUserModal: false,
-                newUserData: {
+                patients: [],
+                user: '',
+                showAddPatientModal: false,
+                showEditPatientModal: false,
+                newPatientData: {
                     name: '',
                     email: '',
                     password: '',
-                    userType: ''
+                    userType: 'patient'
                 },
-                editUserData: {
+                editPatientData: {
                     id: '',
                     name: '',
                     email: '',
                     password: '',
-                    userType: '',
+                    userType: 'patient',
                     updated_at: ''
                 }
             };
         },
+        computed: {
+            isAdmin() {
+                return this.user && this.user.userType === 'admin';
+            },
+            isDoctor() {
+                return this.user && this.user.userType === 'doctor';
+            },
+            isPatient() {
+                return this.user && this.user.userType === 'patient';
+            },
+        },
         mounted() {
-            this.fetchAllUsers();
+            this.fetchPatient();
+        },
+        created() {
+            this.loadUserFromLocalStorage();
         },
         methods: {
-            fetchAllUsers() {
-                fetch('http://127.0.0.1:8000/api/user', {
+            fetchPatient() {
+                fetch('http://127.0.0.1:8000/api/patient', {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -137,7 +134,7 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        this.users = data.UserAccounts;
+                        this.patients = data.PatientAccounts;
                     })
                     .catch(err => {
                         if (err.response) {
@@ -152,66 +149,65 @@
                         }
                     });
             },
-            addDoctor() {
-                this.showAddUserModal = true;
+            addPatient() {
+                this.showAddPatientModal = true;
             },
-            async postUser() {
+            async postPatient() {
                 try {
-                    await axios.post('http://127.0.0.1:8000/api/user', this.newUserData, {
+                    await axios.post('http://127.0.0.1:8000/api/patient', this.newPatientData, {
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': 'Bearer ' + localStorage.getItem('token')
                         }
                     });
-                    this.showAddUserModal = false;
-                    this.newUserData = {
-                        name: '',
-                        email: '',
-                        password: '',
-                        userType: ''
-                    };
-    
+                    this.showAddPatientModal = false;
                 } catch (error) {
                     console.error('There was an error adding the product:', error);
                 }
-                this.fetchAllUsers();
+                this.fetchPatient();
             },
-            editUser(user) {
-                this.editUserData = {
-                    ...user
+            editPatient(patient) {
+                this.editPatientData = {
+                    ...patient
                 };
-                this.showeditUserModal = true;
+                this.showEditPatientModal = true;
             },
-            async updateUser() {
-                this.editUserData.updated_at = new Date().toISOString();
-                await axios.put(`http://127.0.0.1:8000/api/doctor/${this.editUserData.id}`, this.editUserData, {
+            async updatePatient() {
+                this.editPatientData.updated_at = new Date().toISOString();
+                await axios.put(`http://127.0.0.1:8000/api/patient/${this.editPatientData.id}`, this.editPatientData, {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + localStorage.getItem('token')
                     }
                 });
-                this.showeditUserModal = false;
-                this.fetchAllUsers();
+                this.showEditPatientModal = false;
+                this.fetchPatient();
             },
-            async deleteUser(user) {
+            async deletePatient(patient) {
+                const index = this.patients.findIndex(p => p.id === patient.id);
+                if (index !== -1) {
+                    this.patients.splice(index, 1);
+                }
                 try {
-                    const userConfirmed = confirm('Are you sure you want to delete this user?');
-                    if (userConfirmed) {
-                        await axios.delete(`http://127.0.0.1:8000/api/doctor/${user.id}`, {
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + localStorage.getItem('token')
-                            }
-                        });
-                        this.fetchAllUsers();
-                    } else {
-                        console.log('User deletion canceled.');
-                    }
+                    await axios.delete(`http://127.0.0.1:8000/api/patient/${patient.id}`, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
                 } catch (error) {
                     console.error('There was an error deleting the product:', error);
                 }
-            }
-    
+            },
+            loadUserFromLocalStorage() {
+                const user = localStorage.getItem('user');
+                if (user) {
+                    this.user = JSON.parse(user);
+                    this.editUserData = {
+                        ...this.user
+                    };
+                }
+            },
         }
     };
     </script>
@@ -402,9 +398,11 @@
         border-color: #d39e00;
     }
     
+    
     .btn-block {
         display: block;
         width: 100%;
-    }
+      }
     </style>
+    
     

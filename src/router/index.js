@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import UserManagement from '@/components/Users.vue';
 import ManageRegister from '@/components/ManageRegister.vue'
 import ManageLogin from '@/components/ManageLogin.vue'
-
+import PatientManagement from '@/components/Patients.vue'
 
 const routes = [{
         path: '/',
@@ -18,6 +18,12 @@ const routes = [{
         path: '/register',
         name: 'register',
         component: ManageRegister,
+    },
+    {
+        path: '/patients',
+        name: 'PatientManagement',
+        component: PatientManagement,
+        meta: { requiresAuth: true }
     },
     {
         path: '/users',
